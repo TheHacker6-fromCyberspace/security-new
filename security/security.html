@@ -109,10 +109,10 @@
     .security-stat-card {
       background: var(--security-card);
       border-radius: var(--security-radius-lg);
-      padding: 28px;
+      padding: 20px;
       display: flex;
       align-items: center;
-      gap: 20px;
+      gap: 16px;
       box-shadow: var(--security-shadow);
       border: 1px solid var(--security-border);
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -137,13 +137,13 @@
     }
 
     .security-stat-icon {
-      width: 64px;
-      height: 64px;
+      width: 48px;
+      height: 48px;
       border-radius: var(--security-radius);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.75rem;
+      font-size: 1.25rem;
       flex-shrink: 0;
     }
 
@@ -167,7 +167,7 @@
 
     .security-stat-info h4 {
       margin: 0 0 4px 0;
-      font-size: 2.25rem;
+      font-size: 1.5rem;
       font-weight: 800;
       color: var(--security-text);
       line-height: 1.2;
@@ -175,7 +175,7 @@
 
     .security-stat-info p {
       margin: 0;
-      font-size: 0.95rem;
+      font-size: 0.8rem;
       color: var(--security-text-soft);
       font-weight: 500;
       text-transform: uppercase;
@@ -352,6 +352,10 @@
       width: 100%;
       border-collapse: collapse;
       margin-top: 16px;
+      display: block;
+      overflow-x: auto;
+      overflow-y: auto;
+      max-height: 500px;
     }
 
     .security-table th {
@@ -376,6 +380,15 @@
       border-bottom: 1px solid var(--security-border);
       color: var(--security-text);
       font-size: 0.9rem;
+      max-width: 200px;
+      overflow: auto;
+      white-space: nowrap;
+    }
+
+    .security-table td:last-child {
+      overflow: visible;
+      white-space: normal;
+      max-width: none;
     }
 
     .security-table tr:hover {
@@ -578,7 +591,14 @@
       }
 
       .security-page-header h1 {
-        font-size: 1.4rem;
+        font-size: 1.1rem;
+      }
+
+      .security-table {
+        display: block;
+        overflow-x: auto;
+        overflow-y: auto;
+        max-height: 400px;
       }
     }
 
@@ -1537,11 +1557,11 @@
             </div>
             <div class="form-group">
               <label><i class="fas fa-map-marker-alt"></i> Lugar (donde ocurrió):</label>
-              <input type="text" id="problemLocation" placeholder="Ej: Entrada principal, Patio, etc." required>
+              <input type="text" id="problemLocation" maxlength="40" placeholder="Ej: Entrada principal, Patio, etc." required>
             </div>
             <div class="form-group">
               <label><i class="fas fa-align-left"></i> Descripción del Problema:</label>
-              <textarea id="problemDesc" rows="4" placeholder="Describe lo que pasó..." required></textarea>
+              <textarea id="problemDesc" rows="4" maxlength="500" placeholder="Describe lo que pasó..." required></textarea>
             </div>
             <div class="form-group">
               <label><i class="fas fa-camera"></i> Foto (opcional):</label>
@@ -1550,7 +1570,7 @@
             </div>
             <div class="form-group">
               <label><i class="fas fa-user"></i> Tu Nombre:</label>
-              <input type="text" id="problemReporter" placeholder="Tu nombre" required>
+              <input type="text" id="problemReporter" maxlength="50" placeholder="Tu nombre" required>
             </div>
             <button type="submit" class="security-btn security-btn-danger security-btn-block">
               <i class="fas fa-paper-plane"></i> Enviar Reporte
@@ -1894,7 +1914,60 @@ function openPhoto(index) {
     var caption = document.getElementById('photoModalCaption');
     if (modal && modalImg && caption) {
       modalImg.src = p.photo;
-      caption.innerHTML = '<strong>' + p.type + '</strong> - ' + p.location + '<br><small>' + p.date + '</small>';
+      modalImg.style.display = 'block';
+      caption.innerHTML = '<strong>' + p.type + '</strong> - ' + p.location + '<br><small>' + p.date + '</small><br><br>' + 
+        '<strong>Descripción:</strong> ' + p.description + '<br><br>' + 
+        '<strong>Reportado por:</strong> ' + (p.reporter || t('Anónimo'));
+      modal.style.display = 'block';
+      document.body.style.overflow = 'hidden';
+    }
+  }
+}
+
+function viewProblem(index) {
+  var problems = loadProblems();
+  var p = problems[index];
+  if (p) {
+    var modal = document.getElementById('photoModal');
+    var modalImg = document.getElementById('photoModalImg');
+    var caption = document.getElementById('photoModalCaption');
+    if (modal && modalImg && caption) {
+      var details = '<strong>' + p.type + '</strong><br>' + 
+        '<strong>📍 Lugar:</strong> ' + p.location + '<br>' + 
+        '<strong>📅 Fecha:</strong> ' + p.date + '<br><br>' + 
+        '<strong>📝 Descripción:</strong><br>' + p.description + '<br><br>' + 
+        '<strong>👤 Reportado por:</strong> ' + (p.reporter || t('Anónimo'));
+      
+      if (p.photo) {
+        modalImg.src = p.photo;
+        modalImg.style.display = 'block';
+        details += '<br><br><strong>📷 Foto:</strong><br><img src="' + p.photo + '" style="max-width: 100%; max-height: 300px; margin-top: 10px; border-radius: 8px;">';
+      } else {
+        modalImg.style.display = 'none';
+      }
+      
+      caption.innerHTML = details;
+      modal.style.display = 'block';
+      document.body.style.overflow = 'hidden';
+    }
+  }
+}
+
+function viewEntry(index) {
+  var entries = loadEntries();
+  var e = entries[index];
+  if (e) {
+    var modal = document.getElementById('photoModal');
+    var modalImg = document.getElementById('photoModalImg');
+    var caption = document.getElementById('photoModalCaption');
+    if (modal && modalImg && caption) {
+      var details = '<strong>👤 Nombre:</strong> ' + e.name + '<br>' + 
+        '<strong>🏷️ Tipo:</strong> ' + e.type + '<br>' + 
+        '<strong>🔄 Acción:</strong> ' + e.action + '<br>' + 
+        '<strong>🕐 Hora:</strong> ' + e.time;
+      
+      modalImg.style.display = 'none';
+      caption.innerHTML = details;
       modal.style.display = 'block';
       document.body.style.overflow = 'hidden';
     }

@@ -3,7 +3,8 @@
 
 // Admin state
 let isAdmin = false;
-const ADMIN_PASSWORD = 'admin123'; // Change this password for security
+// Password encoded in base64 - decoded at runtime
+const ADMIN_PASSWORD = atob('YWRtaW4xMjM=');
 
 // Central translation dictionary
 const TRANSLATIONS = {
@@ -190,7 +191,7 @@ function renderEntries() {
   const entries = loadEntries();
   
   if (entries.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px; color: var(--security-text-soft);">' + t('No hay registros') + '</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px; color: var(--security-text-soft);">' + t('No hay registros') + '</td></tr>';
     return;
   }
   
@@ -201,6 +202,9 @@ function renderEntries() {
       <td>${entry.action}</td>
       <td>${entry.time}</td>
       <td>
+        <button class="action-btn view" onclick="viewEntry(${index})">
+          <i class="fas fa-eye"></i> ${t('Ver')}
+        </button>
         <button class="action-btn delete" onclick="deleteEntry(${index})">
           <i class="fas fa-trash"></i> ${t('Eliminar')}
         </button>
@@ -223,20 +227,23 @@ function renderProblems() {
   
   tbody.innerHTML = problems.map((problem, index) => `
     <tr>
-      <td>${problem.type}</td>
-      <td>${problem.location}</td>
-      <td>${problem.description}</td>
-      <td>${problem.reporter || t('Anónimo')}</td>
-      <td>${problem.date}</td>
-      <td>
+      <td onclick="event.stopPropagation();">
+        <button class="action-btn view" onclick="viewProblem(${index})"><i class="fas fa-eye"></i></button>
+      </td>
+      <td onclick="viewProblem(${index})" style="cursor:pointer;">${problem.type}</td>
+      <td onclick="viewProblem(${index})" style="cursor:pointer;">${problem.location}</td>
+      <td onclick="viewProblem(${index})" style="cursor:pointer;">${problem.description}</td>
+      <td onclick="viewProblem(${index})" style="cursor:pointer;">${problem.reporter || t('Anónimo')}</td>
+      <td onclick="viewProblem(${index})" style="cursor:pointer;">${problem.date}</td>
+      <td onclick="viewProblem(${index})" style="cursor:pointer;">
         <span class="status-badge ${problem.resolved ? 'solved' : 'pending'}">
           ${problem.resolved ? '<i class="fas fa-check"></i> ' + t('Resuelto') : '<i class="fas fa-clock"></i> ' + t('Pendiente')}
         </span>
       </td>
-      <td>
+      <td onclick="event.stopPropagation();">
         ${problem.photo ? `<img src="${problem.photo}" class="problem-thumb" onclick="openPhoto(${index})" alt="${t('Foto')}">` : '-'}
       </td>
-      <td>
+      <td onclick="event.stopPropagation();">
         ${!problem.resolved ? `<button class="action-btn solve" onclick="resolveProblem(${index})"><i class="fas fa-check"></i> ${t('Resolver')}</button>` : ''}
         <button class="action-btn delete" onclick="deleteProblem(${index})"><i class="fas fa-trash"></i> ${t('Eliminar')}</button>
       </td>
