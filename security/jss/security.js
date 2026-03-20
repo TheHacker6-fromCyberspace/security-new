@@ -3,8 +3,8 @@
 
 // Admin state
 let isAdmin = false;
-// Password encoded in base64 - decoded at runtime
-const ADMIN_PASSWORD = atob('YWRtaW4xMjM=');
+// Admin password - change this value to modify the password
+const ADMIN_PASSWORD = 'admin123';
 
 // Central translation dictionary
 const TRANSLATIONS = {
@@ -94,26 +94,9 @@ function saveProblems(problems) {
   localStorage.setItem(PROBLEMS_KEY, JSON.stringify(problems));
 }
 
-// Show admin panel (called after successful login)
-function showAdminPanel() {
-  const adminPanel = document.getElementById('adminPanel');
-  const securityTabs = document.querySelector('.security-tabs');
-  
-  if (adminPanel) {
-    adminPanel.classList.remove('hidden');
-  }
-  // Hide tabs while in admin mode
-  if (securityTabs) {
-    securityTabs.classList.add('hidden');
-  }
-  showAdminSection('entries');
-  updateStats();
-}
-
 // Toggle admin mode
 function toggleAdminMode() {
   const adminPanel = document.getElementById('adminPanel');
-  const securityTabs = document.querySelector('.security-tabs');
 
   if (isAdmin) {
     // Close admin panel
@@ -121,17 +104,9 @@ function toggleAdminMode() {
       adminPanel.classList.add('hidden');
     }
     isAdmin = false;
-    // Show tabs again
-    if (securityTabs) {
-      securityTabs.classList.remove('hidden');
-    }
     // Show register tab
     showTab('register');
   } else {
-    // Hide tabs
-    if (securityTabs) {
-      securityTabs.classList.add('hidden');
-    }
     // Show admin login tab
     showTab('admin');
   }
@@ -183,12 +158,32 @@ function showAdminSection(section) {
   }
 }
 
+// Helper function to parse Spanish date format
+function parseSpanishDate(dateStr) {
+  if (!dateStr) return new Date(0);
+  // Format: DD/MM/YYYY, HH:MM:SS or similar Spanish format
+  const parts = dateStr.split(/[/, :]/);
+  if (parts.length >= 3) {
+    const day = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1;
+    const year = parseInt(parts[2], 10);
+    const hour = parts[3] ? parseInt(parts[3], 10) : 0;
+    const minute = parts[4] ? parseInt(parts[4], 10) : 0;
+    const second = parts[5] ? parseInt(parts[5], 10) : 0;
+    return new Date(year, month, day, hour, minute, second);
+  }
+  return new Date(dateStr);
+}
+
 // Render entries table
 function renderEntries() {
   const tbody = document.getElementById('entriesBody');
   if (!tbody) return;
   
-  const entries = loadEntries();
+  let entries = loadEntries();
+  
+  // Sort by date (newest first)
+  entries.sort((a, b) => parseSpanishDate(b.time) - parseSpanishDate(a.time));
   
   if (entries.length === 0) {
     tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px; color: var(--security-text-soft);">' + t('No hay registros') + '</td></tr>';
@@ -218,7 +213,10 @@ function renderProblems() {
   const tbody = document.getElementById('problemsBody');
   if (!tbody) return;
   
-  const problems = loadProblems();
+  let problems = loadProblems();
+  
+  // Sort by date (newest first)
+  problems.sort((a, b) => parseSpanishDate(b.date) - parseSpanishDate(a.date));
   
   if (problems.length === 0) {
     tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 40px; color: var(--security-text-soft);">' + t('No hay problemas reportados') + '</td></tr>';
@@ -241,7 +239,7 @@ function renderProblems() {
         </span>
       </td>
       <td onclick="event.stopPropagation();">
-        ${problem.photo ? `<img src="${problem.photo}" class="problem-thumb" onclick="openPhoto(${index})" alt="${t('Foto')}">` : '-'}
+        ${problem.photo ? `<img src="${problem.photo}" class="problem-thumb" onclick="openPhoto(${index})" alt="${t('Foto')}">` : `<button class="action-btn view" onclick="viewProblem(${index})"><i class="fas fa-eye"></i></button>`}
       </td>
       <td onclick="event.stopPropagation();">
         ${!problem.resolved ? `<button class="action-btn solve" onclick="resolveProblem(${index})"><i class="fas fa-check"></i> ${t('Resolver')}</button>` : ''}
